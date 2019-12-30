@@ -63,6 +63,10 @@ class Game extends React.Component {
         };
     }
 
+    getCurrentSquares() {
+        return this.state.history[this.state.historyIndex].squares;
+    }
+
     calculateWinner(squares) {
 
         const lines = [
@@ -87,11 +91,18 @@ class Game extends React.Component {
         return null;
     }
 
+    gameIsOver() {
+        return this.getCurrentSquares()
+            .filter(square => !!square).length === 9;
+    }
+
     getStatus() {
-        const current = this.state.history[this.state.historyIndex];
-        const winner = this.calculateWinner(current.squares);
+        const winner = this.calculateWinner(this.getCurrentSquares());
+
         if (winner) {
             return 'Winner: ' + winner;
+        } else if (this.gameIsOver()) {
+            return 'Draw!';
         }
         const nextPlayer = this.state.xIsNext ? 'X' : 'O';
         return 'Next Player: ' + nextPlayer;
@@ -155,14 +166,11 @@ class Game extends React.Component {
 
     render() {
 
-        const history = this.state.history;
-        const current = history[this.state.historyIndex];
-
         return (
         <div className="game">
             <div className="game-board">
             <Board 
-                squares={ current.squares }
+                squares={ this.getCurrentSquares() }
                 onClick={ (i) => this.handleClick(i) }
             />
             </div>
