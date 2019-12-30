@@ -14,32 +14,35 @@ function Square(props) {
 
 class Board extends React.Component {
 
-    renderSquare(i) {
+    renderSquare(x, y) {
+
+        const i = y * 3 + x;
         return (
             <Square 
+                key={ i }
                 value={ this.props.squares[i] }
-                onClick={ () => this.props.onClick(i) } 
+                onClick={ () => this.props.onClick(i, { x, y }) } 
             />);
     }
 
+    renderBoardRow(y) {
+        const squares = Array(3).fill(null).map((_, x) => this.renderSquare(x, y));
+        return (
+            <div className="board-row" key={ y }>
+                { squares }
+            </div>
+        );
+    }
+
+    renderBoardRows() {
+        return Array(3).fill(null).map((_, y) => this.renderBoardRow(y));
+    }
+
     render() {
+
         return (
             <div>
-                <div className="board-row">
-                {this.renderSquare(0)}
-                {this.renderSquare(1)}
-                {this.renderSquare(2)}
-                </div>
-                <div className="board-row">
-                {this.renderSquare(3)}
-                {this.renderSquare(4)}
-                {this.renderSquare(5)}
-                </div>
-                <div className="board-row">
-                {this.renderSquare(6)}
-                {this.renderSquare(7)}
-                {this.renderSquare(8)}
-                </div>
+                { this.renderBoardRows() }
             </div>
         );
     }
