@@ -135,20 +135,16 @@ class Game extends React.Component {
     renderStepButtons() {
 
         const history = this.state.history;
+        const currentHistoryIndex = this.state.historyIndex;
 
         let historyButtons = history
-            .map((_, historyIndex) => {
-
-                const description = 'Go to ' + (historyIndex ? 'move ' + historyIndex : 'start');
-                return (
-                    <li key={historyIndex}>
-                        <button 
-                            onClick={ () => this.goToHistoryIndex(historyIndex)}>
-                            {description}
-                        </button>
-                    </li>
-                )
-            });
+            .map((_, historyIndex) => (
+                historyJumper({
+                    isSelected: historyIndex === currentHistoryIndex,
+                    historyIndex,
+                    onClick: () => this.goToHistoryIndex(historyIndex)
+                })
+            ));
 
             if (!this.state.showHistoryInOrder) {
                 historyButtons = historyButtons.reverse();
@@ -189,6 +185,22 @@ function HistoryOrderToggle(props) {
         <button onClick={ props.onClick }>
             Toggle step history order
         </button>
+    )
+}
+
+function historyJumper({ historyIndex, onClick, isSelected }) {
+
+    const description = 'Go to ' + (historyIndex ? 'move ' + historyIndex : 'start');
+    const className = isSelected ? 'current-history' : '';
+    return (
+        <li 
+            key={ historyIndex }
+            className={ className }>
+            <button 
+                onClick={ onClick }>
+                { description }
+            </button>
+        </li>
     )
 }
 
