@@ -58,7 +58,8 @@ class Game extends React.Component {
                 squares: Array(9).fill(null)
             }],
             xIsNext: true,
-            historyIndex: 0
+            historyIndex: 0,
+            showHistoryInOrder: true
         };
     }
 
@@ -124,17 +125,31 @@ class Game extends React.Component {
 
         const history = this.state.history;
 
-        return history.map((_, historyIndex) => {
+        let historyButtons = history
+            .map((_, historyIndex) => {
 
-            const description = 'Go to ' + (historyIndex ? 'move ' + historyIndex : 'start');
-            return (
-                <li key={historyIndex}>
-                    <button 
-                        onClick={ () => this.goToHistoryIndex(historyIndex)}>
-                        {description}
-                    </button>
-                </li>
-            )
+                const description = 'Go to ' + (historyIndex ? 'move ' + historyIndex : 'start');
+                return (
+                    <li key={historyIndex}>
+                        <button 
+                            onClick={ () => this.goToHistoryIndex(historyIndex)}>
+                            {description}
+                        </button>
+                    </li>
+                )
+            });
+
+            if (!this.state.showHistoryInOrder) {
+                historyButtons = historyButtons.reverse();
+            }
+
+            return historyButtons;
+    }
+
+    toggleHistoryOrder() {
+
+        this.setState({
+            showHistoryInOrder: !this.state.showHistoryInOrder
         });
     }
 
@@ -153,11 +168,20 @@ class Game extends React.Component {
             </div>
             <div className="game-info">
             <div>{ this.getStatus() }</div>
+            <HistoryOrderToggle onClick={ () => this.toggleHistoryOrder() }/>
             <ol>{ this.renderStepButtons() }</ol>
             </div>
         </div>
         );
     }
+}
+
+function HistoryOrderToggle(props) {
+    return (
+        <button onClick={ props.onClick }>
+            Toggle step history order
+        </button>
+    )
 }
 
 // ========================================
