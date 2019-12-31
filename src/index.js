@@ -2,13 +2,22 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 
+function indexAsCoords(index) {
+
+    const x = index % 3;
+    const y = (index - x) / 3;
+    return { x, y };
+}
+
 function Square(props) {
 
     let className = 'square'; 
     if (props.isSelected) {
         className += ' selected';
     }
-
+    if (props.isWinning) {
+        className += ' winning';
+    }
     return (
         <button 
             className={ className } 
@@ -18,26 +27,60 @@ function Square(props) {
     );
 }
 
+function HistoryOrderToggle(props) {
+    return (
+        <button onClick={ props.onClick }>
+            Toggle step history order
+        </button>
+    )
+}
+
+function historyJumper({ historyIndex, onClick, isSelected, selectedSquareCoords }) {
+
+    const goToLabel = 'Go to ' + (historyIndex ? 'move ' + historyIndex : 'start');
+    const { x, y } = selectedSquareCoords;
+    const coordsLabel = historyIndex ? ` (${x}, ${y})` : '';
+    const description = goToLabel + coordsLabel;
+    const className = isSelected ? 'current-history' : '';
+    return (
+        <li 
+            key={ historyIndex }
+            className={ className }>
+            <button 
+                onClick={ onClick }>
+                { description }
+            </button>
+        </li>
+    )
+}
+
 class Board extends React.Component {
 
     renderSquare(x, y) {
 
         const i = y * 3 + x;
+        x++;
+        y++;
         const boardCoords = { x, y };
         const { x: selectedX, y: selectedY } = this.props.selectedSquareCoords;
         const isSquareSelected = selectedX === x && selectedY === y;
+        const isWinningSquare = this.props.winningSquaresCoords
+            .some(({ x: winningX, y: winningY }) => {
+                return winningX + 1 === x && winningY + 1 === y;
+            });
 
         return (
             <Square 
                 key={ i }
                 value={ this.props.squares[i] }
                 isSelected={ isSquareSelected }
+                isWinning={ isWinningSquare }
                 onClick={ () => this.props.onClick(i, boardCoords) } 
             />);
     }
 
     renderBoardRow(y) {
-        const squares = Array(3).fill(null).map((_, x) => this.renderSquare(x + 1, y + 1));
+        const squares = Array(3).fill(null).map((_, x) => this.renderSquare(x, y));
         return (
             <div className="board-row" key={ y }>
                 { squares }
@@ -70,7 +113,8 @@ class Game extends React.Component {
                 selectedSquareCoords: {
                     x: null,
                     y: null
-                }
+                },
+                winningSquares: []
             }],
             xIsNext: true,
             historyIndex: 0,
@@ -99,7 +143,11 @@ class Game extends React.Component {
 
             const [ a, b, c ] = lines[i];
             if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-                return squares[a];
+
+                return {
+                    winner: squares[a],
+                    winningSquares: lines[i].map(indexAsCoords)
+                };
             }
         }
 
@@ -112,7 +160,7 @@ class Game extends React.Component {
     }
 
     getStatus() {
-        const winner = this.calculateWinner(this.getCurrentHistory().squares);
+        const winner = this.getCurrentHistory().winner;
 
         if (winner) {
             return 'Winner: ' + winner;
@@ -128,12 +176,26 @@ class Game extends React.Component {
         const history = this.state.history.slice(0, this.state.historyIndex + 1);
         const current = history[history.length - 1];
         const squares = [ ...current.squares ];
-        if (this.calculateWinner(squares) || squares[i]) {
+        if (this.getCurrentHistory().winner || squares[i]) {
             return;
         }
         squares[i] = this.state.xIsNext ? 'X' : 'O';
+
+        let winner, winningSquares = [];
+        const winnerInfo = this.calculateWinner(squares);
+
+        if (winnerInfo) {
+            winner = winnerInfo.winner;
+            winningSquares = winnerInfo.winningSquares;
+        }
+
         this.setState({ 
-            history: history.concat([{ squares, selectedSquareCoords }]), 
+            history: history.concat([{ 
+                squares, 
+                selectedSquareCoords, 
+                winner, 
+                winningSquares 
+            }]), 
             xIsNext: !this.state.xIsNext,
             historyIndex: history.length
         });
@@ -178,50 +240,25 @@ class Game extends React.Component {
 
     render() {
 
+        const currentHistory = this.getCurrentHistory();
         return (
-        <div className="game">
-            <div className="game-board">
-            <Board 
-                selectedSquareCoords={ this.getCurrentHistory().selectedSquareCoords }
-                squares={ this.getCurrentHistory().squares }
-                onClick={ (i, coords) => this.handleClick(i, coords) }
-            />
-            </div>
-            <div className="game-info">
-            <div>{ this.getStatus() }</div>
-            <HistoryOrderToggle onClick={ () => this.toggleHistoryOrder() }/>
-            <ol>{ this.renderStepButtons() }</ol>
-            </div>
+            <div className="game">
+                <div className="game-board">
+                <Board 
+                    winningSquaresCoords={ currentHistory.winningSquares }
+                    selectedSquareCoords={ currentHistory.selectedSquareCoords }
+                    squares={ currentHistory.squares }
+                    onClick={ (i, coords) => this.handleClick(i, coords) }
+                />
+                </div>
+                <div className="game-info">
+                <div>{ this.getStatus() }</div>
+                <HistoryOrderToggle onClick={ () => this.toggleHistoryOrder() }/>
+                <ol>{ this.renderStepButtons() }</ol>
+                </div>
         </div>
         );
     }
-}
-
-function HistoryOrderToggle(props) {
-    return (
-        <button onClick={ props.onClick }>
-            Toggle step history order
-        </button>
-    )
-}
-
-function historyJumper({ historyIndex, onClick, isSelected, selectedSquareCoords }) {
-
-    const goToLabel = 'Go to ' + (historyIndex ? 'move ' + historyIndex : 'start');
-    const { x, y } = selectedSquareCoords;
-    const coordsLabel = historyIndex ? ` (${x}, ${y})` : '';
-    const description = goToLabel + coordsLabel;
-    const className = isSelected ? 'current-history' : '';
-    return (
-        <li 
-            key={ historyIndex }
-            className={ className }>
-            <button 
-                onClick={ onClick }>
-                { description }
-            </button>
-        </li>
-    )
 }
 
 // ========================================

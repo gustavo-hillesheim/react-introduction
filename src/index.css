@@ -37,6 +37,11 @@ ol, ul {
   border-width: 2px;
 }
 
+.square.winning {
+  border-color: #0f0;
+  border-width: 2px;
+}
+
 .square:focus {
   outline: none;
 }
