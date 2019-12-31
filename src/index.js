@@ -3,9 +3,15 @@ import ReactDOM from 'react-dom';
 import './index.css';
 
 function Square(props) {
+
+    let className = 'square'; 
+    if (props.isSelected) {
+        className += ' selected';
+    }
+
     return (
         <button 
-            className="square" 
+            className={ className } 
             onClick={ props.onClick }>
             { props.value }
         </button>
@@ -17,16 +23,21 @@ class Board extends React.Component {
     renderSquare(x, y) {
 
         const i = y * 3 + x;
+        const boardCoords = { x, y };
+        const { x: selectedX, y: selectedY } = this.props.selectedSquareCoords;
+        const isSquareSelected = selectedX === x && selectedY === y;
+
         return (
             <Square 
                 key={ i }
                 value={ this.props.squares[i] }
-                onClick={ () => this.props.onClick(i, { x, y }) } 
+                isSelected={ isSquareSelected }
+                onClick={ () => this.props.onClick(i, boardCoords) } 
             />);
     }
 
     renderBoardRow(y) {
-        const squares = Array(3).fill(null).map((_, x) => this.renderSquare(x, y));
+        const squares = Array(3).fill(null).map((_, x) => this.renderSquare(x + 1, y + 1));
         return (
             <div className="board-row" key={ y }>
                 { squares }
@@ -55,7 +66,11 @@ class Game extends React.Component {
 
         this.state = {
             history: [{
-                squares: Array(9).fill(null)
+                squares: Array(9).fill(null),
+                selectedSquareCoords: {
+                    x: null,
+                    y: null
+                }
             }],
             xIsNext: true,
             historyIndex: 0,
@@ -63,8 +78,8 @@ class Game extends React.Component {
         };
     }
 
-    getCurrentSquares() {
-        return this.state.history[this.state.historyIndex].squares;
+    getCurrentHistory() {
+        return this.state.history[this.state.historyIndex];
     }
 
     calculateWinner(squares) {
@@ -92,12 +107,12 @@ class Game extends React.Component {
     }
 
     gameIsOver() {
-        return this.getCurrentSquares()
-            .filter(square => !!square).length === 9;
+        return this.getCurrentHistory()
+            .squares.filter(square => !!square).length === 9;
     }
 
     getStatus() {
-        const winner = this.calculateWinner(this.getCurrentSquares());
+        const winner = this.calculateWinner(this.getCurrentHistory().squares);
 
         if (winner) {
             return 'Winner: ' + winner;
@@ -108,7 +123,7 @@ class Game extends React.Component {
         return 'Next Player: ' + nextPlayer;
     }
 
-    handleClick(i) {
+    handleClick(i, selectedSquareCoords) {
 
         const history = this.state.history.slice(0, this.state.historyIndex + 1);
         const current = history[history.length - 1];
@@ -118,7 +133,7 @@ class Game extends React.Component {
         }
         squares[i] = this.state.xIsNext ? 'X' : 'O';
         this.setState({ 
-            history: history.concat([{ squares }]), 
+            history: history.concat([{ squares, selectedSquareCoords }]), 
             xIsNext: !this.state.xIsNext,
             historyIndex: history.length
         });
@@ -138,10 +153,11 @@ class Game extends React.Component {
         const currentHistoryIndex = this.state.historyIndex;
 
         let historyButtons = history
-            .map((_, historyIndex) => (
+            .map((currentHistory, historyIndex) => (
                 historyJumper({
                     isSelected: historyIndex === currentHistoryIndex,
                     historyIndex,
+                    selectedSquareCoords: currentHistory.selectedSquareCoords,
                     onClick: () => this.goToHistoryIndex(historyIndex)
                 })
             ));
@@ -166,8 +182,9 @@ class Game extends React.Component {
         <div className="game">
             <div className="game-board">
             <Board 
-                squares={ this.getCurrentSquares() }
-                onClick={ (i) => this.handleClick(i) }
+                selectedSquareCoords={ this.getCurrentHistory().selectedSquareCoords }
+                squares={ this.getCurrentHistory().squares }
+                onClick={ (i, coords) => this.handleClick(i, coords) }
             />
             </div>
             <div className="game-info">
@@ -188,9 +205,12 @@ function HistoryOrderToggle(props) {
     )
 }
 
-function historyJumper({ historyIndex, onClick, isSelected }) {
+function historyJumper({ historyIndex, onClick, isSelected, selectedSquareCoords }) {
 
-    const description = 'Go to ' + (historyIndex ? 'move ' + historyIndex : 'start');
+    const goToLabel = 'Go to ' + (historyIndex ? 'move ' + historyIndex : 'start');
+    const { x, y } = selectedSquareCoords;
+    const coordsLabel = historyIndex ? ` (${x}, ${y})` : '';
+    const description = goToLabel + coordsLabel;
     const className = isSelected ? 'current-history' : '';
     return (
         <li 
