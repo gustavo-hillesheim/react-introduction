@@ -43,7 +43,11 @@ export class Board extends React.Component {
         value={ this.props.gameState.squares[i] }
         isSelected={ this.isSelectedSquare(squareCoords) }
         isWinning={ this.isWinningSquare(squareCoords) }
-        onClick={ () => this.props.onClick(squareCoords) } 
+        onClick={ () => {
+          if (this.props.onSquareClick) {
+            this.props.onSquareClick(squareCoords);
+          }
+        }} 
       />);
   }
 
@@ -63,7 +67,7 @@ export class Board extends React.Component {
   render() {
 
     return (
-      <div>
+      <div className="game-board">
         { this.renderBoardRows() }
       </div>
     );

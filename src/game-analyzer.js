@@ -35,8 +35,10 @@ export class GameAnalyzer {
     return gameState.squares.filter(square => !!square).length === 9;
   }
 
-  getStatus(gameState, nextPlayer) {
+  getStatus(gameState, xIsNext) {
+
     const winner = gameState.winner;
+    const nextPlayer = xIsNext ? 'X' : 'O';
 
     if (winner) {
         return 'Winner: ' + winner;

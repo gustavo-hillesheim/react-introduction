@@ -20,16 +20,16 @@ ol, ul {
 .square {
   background: #fff;
   border: 1px solid #999;
+  border-radius: 5px;
   float: left;
   font-size: 24px;
   font-weight: bold;
   line-height: 34px;
-  height: 34px;
-  margin-right: -1px;
-  margin-top: -1px;
-  padding: 0;
   text-align: center;
+  height: 34px;
   width: 34px;
+  padding: 0;
+  margin: 1px;
 }
 
 .square.selected {
@@ -52,11 +52,9 @@ ol, ul {
 
 .game {
   display: flex;
-  flex-direction: row;
-}
-
-.game-info {
-  margin-left: 20px;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
 }
 
 .current-history {
@@ -65,4 +63,33 @@ ol, ul {
 
 .current-history button {
   font-weight: bold;
+}
+
+.game-history-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.game-history-row {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 8px;
+}
+
+.current-game-board {
+  margin: 0 auto;
+}
+
+.game-board {
+  margin: 8px;
+  border-radius: 5px;
+}
+
+h2 {
+  margin: 4px;
+}
+
+h3 {
+  margin: 0;
 }
